@@ -10,8 +10,12 @@
     "test": "jest"
   },
   "dependencies": {
+    "@n1ru4l/react-in-center-of-screen": "^1.0.0-alpha.4",
+    "@react-native-community/hooks": "3.0.0",
     "react": "19.0.0",
-    "react-native": "0.79.2"
+    "react-native": "0.79.2",
+    "react-native-safe-area-context": "^5.5.0",
+    "react-native-video": "6.15.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

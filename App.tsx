@@ -1,130 +1,116 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, {useRef, useState} from 'react';
+import {FlatList, StyleSheet, Text, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import Header from './src/components/Header';
+import Tabs from './src/components/Tabs';
+import TabContent from './src/components/TabContent';
+import {cards} from './src/utils/data';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+const App: React.FC = () => {
+  const [activeTab, setActiveTab] = React.useState(0);
+  const [mostVisibleIndex, setMostVisibleIndex] = useState<number | null>(null);
+  const flatListRef = useRef<FlatList>(null);
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+  const renderHeader = () => (
+    <>
+      <Header />
+      <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
+    </>
   );
-}
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const onViewableItemsChanged = React.useRef(
+    ({
+      viewableItems,
+    }: {
+      viewableItems: {item: any; index: number; isViewable: boolean}[];
+    }) => {
+      const mostVisible = viewableItems.reduce(
+        (max, item) => {
+          if (item.isViewable && item.item.type === 'video') {
+            const viewablePercentage = item.isViewable ? 1 : 0;
+            if (viewablePercentage > max.percentage) {
+              return {index: item.index, percentage: viewablePercentage};
+            }
+          }
+          return max;
+        },
+        {index: null as number | null, percentage: 0},
+      );
+      setMostVisibleIndex(mostVisible.index);
+    },
+  ).current;
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  /*
-   * To keep the template simple and small we're adding padding to prevent view
-   * from rendering under the System UI.
-   * For bigger apps the recommendation is to use `react-native-safe-area-context`:
-   * https://github.com/AppAndFlow/react-native-safe-area-context
-   *
-   * You can read more about it here:
-   * https://github.com/react-native-community/discussions-and-proposals/discussions/827
-   */
-  const safePadding = '5%';
+  const filteredCards = cards.filter(item => {
+    console.log('Filtering item:', item, 'activeTab:', activeTab); 
+    if (activeTab === 0) return true; 
+    if (activeTab === 1) return item.type === 'video'; 
+    if (activeTab === 2) return item.type === 'tagged'; 
+    return false;
+  });
+  console.log('Filtered Cards:', filteredCards, activeTab);
 
   return (
-    <View style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <FlatList
+        ref={flatListRef}
+        data={filteredCards}
+        renderItem={({item, index}) => (
+          <TabContent
+            data={item}
+            activeTab={activeTab}
+            mostVisibleIndex={mostVisibleIndex}
+            index={index}
+          />
+        )}
+        keyExtractor={item => item.id}
+        stickyHeaderIndices={[0]}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={renderHeader}
+        style={styles.flatList}
+        viewabilityConfig={{
+          minimumViewTime: 100,
+          itemVisiblePercentThreshold: 30,
+        }}
+        onViewableItemsChanged={onViewableItemsChanged}
       />
-      <ScrollView
-        style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
-        </View>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </View>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
   },
-  sectionTitle: {
+  flatList: {
+    flex: 1,
+  },
+  aboutContainer: {
+    padding: 20,
+    backgroundColor: '#f9f9f9',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  aboutTitle: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+    textAlign: 'center',
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  aboutText: {
+    fontSize: 16,
+    color: '#555',
+    lineHeight: 24,
+    marginBottom: 15,
+    textAlign: 'justify',
   },
-  highlight: {
-    fontWeight: '700',
+  aboutSubtext: {
+    fontSize: 14,
+    color: '#777',
+    lineHeight: 20,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
 
