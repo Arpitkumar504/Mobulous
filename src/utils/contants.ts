@@ -7,6 +7,9 @@ export const IMAGES = {
 export const VIDEO = {
   light: require('../asset/video/light.mp4'),
   workout: require('../asset/video/workout.mp4'),
+  nature: require('../asset/video/nature.mp4'),
+  city: require('../asset/video/city.mp4'),
+  mountain: require('../asset/video/mountain.mp4'),
 };
 
 export const COLORS = {
